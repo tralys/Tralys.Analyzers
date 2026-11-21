@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Tralys.Analyzers/Tralys.Analyzers.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Tralys.Analyzers.Tests/Tralys.Analyzers.Tests.csproj" />
+  </Folder>
+</Solution>

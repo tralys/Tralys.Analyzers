@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_call:
+    inputs:
+      version:
+        description: Package version; empty packs VersionPrefix with a ci suffix
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DOTNET_NOLOGO: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Format
+        run: |
+          dotnet tool restore
+          dotnet csharpier check .
+
+      - name: Version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$VERSION" ]; then
+            echo "VERSION_ARGS=-p:Version=$VERSION" >> "$GITHUB_ENV"
+          else
+            echo "VERSION_ARGS=-p:VersionSuffix=ci.$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+          fi
+
+      - run: dotnet restore Tralys.Analyzers.slnx
+
+      - run: dotnet build Tralys.Analyzers.slnx -c Release --no-restore "$VERSION_ARGS"
+
+      - name: Test
+        run: |
+          for project in tests/*.Tests; do
+            echo "::group::$project"
+            dotnet run --project "$project" -c Release --no-build
+            echo "::endgroup::"
+          done
+
+      - run: dotnet pack Tralys.Analyzers.slnx -c Release --no-build -o artifacts/packages "$VERSION_ARGS"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: artifacts/packages/
+          retention-days: 7

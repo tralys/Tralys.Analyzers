@@ -9,9 +9,8 @@ break there. This file covers working in the repo.
 - `dotnet run --project tests/Tralys.Analyzers.Tests`, never `dotnet test`. Narrow with
   `-- --treenode-filter '/*/*/<Class>/<Test>'`.
 - The full check is the steps in `.github/workflows/ci.yml`.
-- Tralys.Ui, Tralys.Ecs and Tralys.BehaviorTree take the package from a local feed until it is on nuget.org:
-  `scripts/pack-local.sh` packs this checkout under a version named for its contents and repins their
-  `TralysAnalyzersVersion`.
+- A release is a `## [version]` section in `CHANGELOG.md` and a signed `v<version>` tag on master;
+  `.github/workflows/release.yml` builds, publishes to nuget.org and creates the GitHub release.
 
 ## What belongs here
 
